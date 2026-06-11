@@ -1,0 +1,27 @@
+# Material privado do desafio e de planejamento — NÃO publicar
+desafio.txt
+desafio.png
+plano-backend-nodejs.md
+plano-frontend-nextjs.md
+_interviewer/
+.claude/
+
+# Dependências e build
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Logs, SO e editores
+*.log
+npm-debug.log*
+.DS_Store
+.idea/
+.vscode/

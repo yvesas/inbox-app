@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# next
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+server/dist/
+
+# env
+.env
+.env*.local
+
+# misc
+.DS_Store
+*.log
+coverage/
+.idea/
+.vscode/
+
+# packaged SAM output
+server/packaged.yaml
+
+# Material exclusivo do entrevistador — NUNCA versionar no repo público.
+_interviewer/
+
+# typescript build info
+*.tsbuildinfo
