@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import { env } from "../config/env.js";
 import { registerWebhookRoutes } from "./webhook-routes.js";
+import { registerConversationRoutes } from "./conversation-routes.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -46,6 +47,7 @@ export function buildApp(): FastifyInstance {
   app.get("/health", async () => ({ ok: true }));
 
   void registerWebhookRoutes(app);
+  void registerConversationRoutes(app);
 
   return app;
 }
