@@ -14,14 +14,16 @@ export function ConnectionCheck() {
   if (me.isError || conversations.isError) {
     return (
       <p className="mt-2 text-sm text-red-600">
-        Não consegui conectar. Confira <code>NEXT_PUBLIC_API_URL</code> no seu <code>.env.local</code>.
+        Não consegui conectar. Confira <code>NEXT_PUBLIC_API_URL</code> no seu{" "}
+        <code>.env.local</code>.
       </p>
     );
   }
 
   return (
     <p className="mt-2 text-sm text-green-700">
-      ✓ Conectado como <strong>{me.data?.name}</strong> — {conversations.data?.length} conversas carregadas.
+      ✓ Conectado como <strong>{me.data?.name}</strong> — {conversations.data?.length} conversas
+      carregadas.
     </p>
   );
 }

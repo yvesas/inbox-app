@@ -40,9 +40,9 @@ export async function sendWhatsAppText(params: SendTextParams): Promise<SendText
     throw new Error(`falha ao entregar resposta (HTTP ${response.status}) ${detail}`.trim());
   }
 
-  const data = (await response.json().catch(() => null)) as
-    | { messages?: Array<{ id?: string }> }
-    | null;
+  const data = (await response.json().catch(() => null)) as {
+    messages?: Array<{ id?: string }>;
+  } | null;
 
   return { waMessageId: data?.messages?.[0]?.id ?? null };
 }

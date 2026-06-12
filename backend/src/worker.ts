@@ -73,10 +73,7 @@ function main(): void {
   });
 
   worker.on("failed", (job, err) => {
-    logger.error(
-      { jobId: job?.id, attempts: job?.attemptsMade, err: err.message },
-      "job falhou",
-    );
+    logger.error({ jobId: job?.id, attempts: job?.attemptsMade, err: err.message }, "job falhou");
   });
 
   logger.info(

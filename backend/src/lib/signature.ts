@@ -12,8 +12,7 @@ export function verifyMetaSignature(
 ): boolean {
   if (!signatureHeader) return false;
 
-  const expected =
-    "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody).digest("hex");
+  const expected = "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody).digest("hex");
 
   const received = Buffer.from(signatureHeader);
   const computed = Buffer.from(expected);

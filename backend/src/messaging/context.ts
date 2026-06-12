@@ -42,9 +42,7 @@ export async function loadInboundContext(
     .select({ waId: contacts.waId })
     .from(conversations)
     .innerJoin(contacts, eq(conversations.contactId, contacts.id))
-    .where(
-      and(eq(conversations.id, inbound.conversationId), eq(conversations.tenantId, tenantId)),
-    )
+    .where(and(eq(conversations.id, inbound.conversationId), eq(conversations.tenantId, tenantId)))
     .limit(1);
 
   const contact = contactRows[0];
@@ -54,10 +52,7 @@ export async function loadInboundContext(
     .select({ id: messages.id, direction: messages.direction, body: messages.body })
     .from(messages)
     .where(
-      and(
-        eq(messages.tenantId, tenantId),
-        eq(messages.conversationId, inbound.conversationId),
-      ),
+      and(eq(messages.tenantId, tenantId), eq(messages.conversationId, inbound.conversationId)),
     )
     .orderBy(asc(messages.createdAt));
 

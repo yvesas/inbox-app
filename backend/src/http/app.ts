@@ -26,23 +26,19 @@ export function buildApp(): FastifyInstance {
 
   // Preserva o corpo cru (necessário para validar a assinatura HMAC do webhook)
   // e ainda entrega o JSON parseado em req.body.
-  app.addContentTypeParser(
-    "application/json",
-    { parseAs: "buffer" },
-    (req, body, done) => {
-      const buffer = body as Buffer;
-      req.rawBody = buffer;
-      if (buffer.length === 0) {
-        done(null, {});
-        return;
-      }
-      try {
-        done(null, JSON.parse(buffer.toString("utf8")));
-      } catch (err) {
-        done(err as Error, undefined);
-      }
-    },
-  );
+  app.addContentTypeParser("application/json", { parseAs: "buffer" }, (req, body, done) => {
+    const buffer = body as Buffer;
+    req.rawBody = buffer;
+    if (buffer.length === 0) {
+      done(null, {});
+      return;
+    }
+    try {
+      done(null, JSON.parse(buffer.toString("utf8")));
+    } catch (err) {
+      done(err as Error, undefined);
+    }
+  });
 
   app.get("/health", async () => ({ ok: true }));
 

@@ -25,9 +25,50 @@ const GREETINGS = ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite", "ea
 
 // Palavras muito comuns que não ajudam a discriminar blocos.
 const STOPWORDS = new Set([
-  "a","o","as","os","um","uma","de","do","da","dos","das","e","ou","que","qual","quais",
-  "para","por","com","sem","em","no","na","nos","nas","me","meu","minha","quanto","quantos",
-  "como","onde","quando","tem","ter","voce","vocês","voces","eu","é","sao","são","ao","se",
+  "a",
+  "o",
+  "as",
+  "os",
+  "um",
+  "uma",
+  "de",
+  "do",
+  "da",
+  "dos",
+  "das",
+  "e",
+  "ou",
+  "que",
+  "qual",
+  "quais",
+  "para",
+  "por",
+  "com",
+  "sem",
+  "em",
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "me",
+  "meu",
+  "minha",
+  "quanto",
+  "quantos",
+  "como",
+  "onde",
+  "quando",
+  "tem",
+  "ter",
+  "voce",
+  "vocês",
+  "voces",
+  "eu",
+  "é",
+  "sao",
+  "são",
+  "ao",
+  "se",
 ]);
 
 export function generateStubReply(input: ReplyInput): string {
@@ -61,10 +102,7 @@ function isGreeting(normalized: string): boolean {
 }
 
 function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, ""); // remove acentos (combining marks)
+  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); // remove acentos (combining marks)
 }
 
 function tokenize(normalized: string): string[] {

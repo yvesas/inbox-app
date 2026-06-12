@@ -81,10 +81,7 @@ async function upsertContact(
   return row.id;
 }
 
-async function getOrCreateOpenConversation(
-  tenantId: string,
-  contactId: string,
-): Promise<string> {
+async function getOrCreateOpenConversation(tenantId: string, contactId: string): Promise<string> {
   const existing = await db
     .select({ id: conversations.id })
     .from(conversations)
