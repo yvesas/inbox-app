@@ -4,6 +4,7 @@ drizzle
 coverage
 package-lock.json
 mock-meta-server
+mock-openai-server
 
 # Conteúdo do desafio / docs — não reformatar (a KB é parseada pelo StubProvider)
 *.md

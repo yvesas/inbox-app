@@ -46,5 +46,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # Mock de uma API compatível com a OpenAI (Chat Completions) — roda o caminho
+  # do OpenAiProvider OFFLINE. Para usá-lo, no .env:
+  #   OPENAI_BASE_URL=http://localhost:8002/v1
+  #   OPENAI_API_KEY=fake-key
+  mock-openai:
+    build: ./mock-openai-server
+    ports:
+      - "8002:8002"
+
 volumes:
   pgdata:

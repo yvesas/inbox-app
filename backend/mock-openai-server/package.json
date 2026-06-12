@@ -1,0 +1,10 @@
+{
+  "name": "mock-openai-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Mock de API compatível com a OpenAI (Chat Completions) para rodar offline",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
