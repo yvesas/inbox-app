@@ -20,23 +20,28 @@ export function isUsableOpenAiKey(key: string | undefined): boolean {
 interface ProviderOptions {
   apiKey?: string;
   model?: string;
+  baseURL?: string;
 }
 
 /**
  * Escolhe o provedor de LLM em tempo de execução:
- *  - OpenAI, quando há uma chave válida;
+ *  - OpenAI, quando há uma chave válida OU quando um baseURL aponta para uma API
+ *    compatível (o mock-openai) — aí qualquer chave não-vazia serve;
  *  - StubProvider (determinístico, sem custo) caso contrário.
  */
 export function getLlmProvider(options: ProviderOptions = {}): LlmProvider {
   const apiKey = options.apiKey ?? env.OPENAI_API_KEY;
   const model = options.model ?? env.OPENAI_MODEL;
+  const baseURL = options.baseURL ?? env.OPENAI_BASE_URL;
 
-  if (isUsableOpenAiKey(apiKey)) {
-    return new OpenAiProvider({ apiKey, model });
+  // Com baseURL (fake/compatível), basta uma chave não-vazia.
+  const useOpenAi = isUsableOpenAiKey(apiKey) || (baseURL !== "" && apiKey !== "");
+  if (useOpenAi) {
+    return new OpenAiProvider({ apiKey, model, baseURL: baseURL || undefined });
   }
 
   logger.warn(
-    "OPENAI_API_KEY ausente ou inválida — usando StubProvider (respostas determinísticas a partir da base de conhecimento).",
+    "OPENAI_API_KEY ausente/ inválida e sem OPENAI_BASE_URL — usando StubProvider (respostas determinísticas a partir da base de conhecimento).",
   );
   return new StubProvider();
 }

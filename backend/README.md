@@ -85,6 +85,21 @@ escolhe:
 Assim o fluxo roda **ponta a ponta sem chave** e os testes não dependem da OpenAI. Para usar a
 IA real, basta preencher `OPENAI_API_KEY` no `.env`.
 
+**Exercitar o caminho da IA offline** (sem custo): o `docker compose` inclui um **`mock-openai`**
+(API compatível com Chat Completions). Aponte o backend para ele no `.env` e o `OpenAiProvider`
+roda contra o fake:
+
+```env
+OPENAI_BASE_URL=http://localhost:8002/v1
+OPENAI_API_KEY=fake-key
+```
+
+### Atalho: subir tudo com um comando
+
+```bash
+npm run stack   # infra (docker) + migrate + seed + API + worker, com logs rotulados
+```
+
 ---
 
 ## Variáveis de ambiente

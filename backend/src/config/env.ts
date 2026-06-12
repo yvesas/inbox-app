@@ -15,6 +15,9 @@ const envSchema = z.object({
 
   OPENAI_API_KEY: z.string().default(""),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
+  // Base URL da API compatível com OpenAI. Vazio = api.openai.com (padrão da SDK).
+  // Aponte para o mock-openai para rodar o caminho da IA offline.
+  OPENAI_BASE_URL: z.string().default(""),
 
   META_VERIFY_TOKEN: z.string(),
   META_APP_SECRET: z.string(),

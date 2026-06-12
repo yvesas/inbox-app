@@ -1,0 +1,87 @@
+name: CI
+
+# Dispara em PRs e em push na main. (Monorepo: por enquanto só o backend está
+# ativo; quando houver CI de frontend, separar em jobs/paths.)
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancela execuções antigas da mesma branch/PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend (lint · typecheck · test · build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: atendimento
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/atendimento
+      REDIS_URL: redis://localhost:6379
+      # env.ts exige estes (sem default). Valores fixos de CI; sem segredos reais.
+      META_VERIFY_TOKEN: ci-verify-token
+      META_APP_SECRET: super-secret-app-secret-trocar
+      META_PHONE_NUMBER_ID: "123456789012345"
+      # Sem OPENAI_API_KEY → testes usam o StubProvider/mocks.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Formatação (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Migrar banco
+        run: npm run db:migrate
+
+      - name: Testes (unit + integração) com cobertura
+        run: npm run test:coverage
+
+      - name: Publicar relatório de cobertura (lcov)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: backend/coverage/lcov.info
+          if-no-files-found: ignore
+
+      - name: Build
+        run: npm run build
