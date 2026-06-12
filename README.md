@@ -13,3 +13,23 @@ São duas aplicações independentes:
   Detalhes em [`frontend/README.md`](./frontend/README.md).
 
 Cada aplicação tem seu próprio `package.json`, dependências e instruções de execução.
+
+## Desenvolvimento
+
+Este monorepo usa **Husky + lint-staged** (na raiz) para padronizar os commits. Ao clonar,
+instale as dependências da raiz **uma vez** para ativar os git hooks:
+
+```bash
+npm install            # na raiz — instala husky e registra os hooks
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+Hooks ativos:
+
+- **pre-commit** — bloqueia arquivos `.env` no stage (exceto `.env.example`) e roda
+  Prettier (`--write`) + ESLint (`--fix`) nos arquivos staged de cada app (via lint-staged).
+- **pre-push** — roda `typecheck` no backend e no frontend.
+
+Cada app tem sua própria config de Prettier/ESLint; o runner do lint-staged usa o ferramental
+da app a que o arquivo pertence.

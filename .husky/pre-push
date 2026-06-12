@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Gate antes do push: typecheck das apps que existem (rápido, sem infra).
+# Testes e e2e ficam para CI/execução manual (podem exigir docker).
+set -e
+
+for app in backend frontend; do
+  if [ -f "$app/package.json" ] && grep -q '"typecheck"' "$app/package.json"; then
+    echo "→ typecheck ($app)…"
+    ( cd "$app" && npm run -s typecheck )
+  fi
+done

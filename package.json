@@ -1,0 +1,17 @@
+{
+  "name": "inbox-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo (backend + frontend) — git hooks compartilhados (Husky + lint-staged)",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "backend/**/*.{ts,tsx}": "node scripts/lint-staged-runner.mjs backend",
+    "frontend/**/*.{ts,tsx}": "node scripts/lint-staged-runner.mjs frontend"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  }
+}

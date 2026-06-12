@@ -13,20 +13,16 @@ export async function registerConversationRoutes(app: FastifyInstance) {
     return reply.send(data);
   });
 
-  app.get(
-    "/conversations/:id/messages",
-    { preHandler: authenticateTenant },
-    async (req, reply) => {
-      const tenant = req.tenant!;
-      const { id } = req.params as { id: string };
+  app.get("/conversations/:id/messages", { preHandler: authenticateTenant }, async (req, reply) => {
+    const tenant = req.tenant!;
+    const { id } = req.params as { id: string };
 
-      const conversation = await getConversationForTenant(tenant.id, id);
-      if (!conversation) {
-        return reply.code(404).send({ error: "conversation_not_found" });
-      }
+    const conversation = await getConversationForTenant(tenant.id, id);
+    if (!conversation) {
+      return reply.code(404).send({ error: "conversation_not_found" });
+    }
 
-      const data = await listMessages(tenant.id, id);
-      return reply.send(data);
-    },
-  );
+    const data = await listMessages(tenant.id, id);
+    return reply.send(data);
+  });
 }

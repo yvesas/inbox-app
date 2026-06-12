@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# Espelha as regras dos hooks do Claude para devs humanos:
+#  - bloqueia arquivos .env staged (segredos), exceto .env.example;
+#  - roda Prettier + ESLint --fix nos arquivos staged (via lint-staged).
+
+staged="$(git diff --cached --name-only --diff-filter=ACM)"
+
+bad="$(printf '%s\n' "$staged" | grep -E '(^|/)\.env(\.[^/]+)?$' | grep -vE '(^|/)\.env\.example$' || true)"
+if [ -n "$bad" ]; then
+  echo "✖ Commit bloqueado — arquivo .env staged (pode conter segredos):"
+  printf '   %s\n' "$bad"
+  echo "  Remova do stage (git restore --staged <arquivo>) e use .env.example."
+  exit 1
+fi
+
+npx --no-install lint-staged
