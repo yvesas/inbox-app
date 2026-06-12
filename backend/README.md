@@ -1,165 +1,205 @@
-# Desafio Técnico — Desenvolvedor(a) Backend (Node.js)
+# inbox-backend — Atendimento WhatsApp com IA (NeoFibra)
 
-> **Atendimento WhatsApp com IA** — um cenário real do nosso dia a dia.
+Backend que recebe mensagens de WhatsApp (formato **Meta Cloud API**), processa de forma
+**assíncrona** e responde com uma **LLM ancorada numa base de conhecimento**, de volta pelo
+mock da Meta. Multi-tenant, idempotente e observável.
 
-Bem-vindo(a)! Este desafio simula um problema que resolvemos de verdade na Myde: receber
-mensagens de clientes pelo **WhatsApp**, processá-las com uma **LLM (OpenAI)** e responder
-automaticamente — de forma assíncrona, segura e isolada por cliente (multi-tenant).
-
-Não buscamos o "código mais bonito". Buscamos entender **como você pensa**: as decisões de
-arquitetura, os trade-offs que você reconhece e o que você conscientemente deixou de fora.
+> Desafio técnico — Desenvolvedor(a) Backend (Node.js + TypeScript).
 
 ---
 
-## 🎯 O que você vai construir
-
-Um backend em **Node.js + TypeScript** que:
+## Fluxo
 
 ```
-   Cliente no WhatsApp
-        │  (mensagem)
-        ▼
-   Meta WhatsApp Cloud API
-        │  POST webhook (assinado)
-        ▼
- ┌─────────────────────────┐
- │   SEU BACKEND           │
- │  1. valida assinatura   │
- │  2. persiste a mensagem │
- │  3. enfileira o job ────┼──► fila (Redis/BullMQ ou SQS)
- │  4. responde 200 rápido │            │
- └─────────────────────────┘            ▼
-                                 ┌──────────────────┐
-                                 │   WORKER         │
-                                 │  - monta contexto│
-                                 │  - chama OpenAI  │
-                                 │  - envia resposta├──► Meta API (mock) ──► Cliente
-                                 └──────────────────┘
+Meta (mock)  ──POST /webhook (assinado HMAC)──►  API (Fastify)
+                                                   │  valida assinatura (raw body)
+                                                   │  persiste inbound (idempotente)
+                                                   │  responde 200  ──┐  (sem LLM aqui)
+                                                   └─ enfileira job ──►  Redis / BullMQ
+                                                                          │
+                                                            Worker (processo separado)
+                                                              │ monta contexto (histórico + KB)
+                                                              │ gera resposta (OpenAI ou Stub)
+                                                              │ entrega ► POST {meta}/{id}/messages
+                                                              └ persiste outbound + marca inbound
 ```
 
-Para você focar no que importa, **já fornecemos** um servidor que **simula a Meta** (recebe
-seus envios e dispara webhooks assinados pra você), uma base de conhecimento e toda a infra
-local via Docker.
+O webhook responde **200 imediatamente**; toda chamada à LLM e a entrega acontecem **no worker**.
 
 ---
 
-## ✅ Requisitos
+## Stack e por quê
 
-### 1. Webhook da Meta
-- **Verificação (`GET /webhook`)**: responder ao handshake da Meta com o `hub.challenge`
-  quando o `hub.verify_token` bater com o seu `META_VERIFY_TOKEN`.
-- **Recebimento (`POST /webhook`)**: validar a assinatura `X-Hub-Signature-256`
-  (HMAC-SHA256 do **corpo cru** da requisição usando o `META_APP_SECRET`). Requisição com
-  assinatura inválida deve ser rejeitada.
-
-### 2. Persistência
-- Modele e persista **contatos**, **conversas** e **mensagens** (inbound e outbound).
-- Sugerimos **PostgreSQL + Drizzle ORM** (já no docker-compose), mas você pode usar outro
-  ORM/driver se justificar.
-
-### 3. Processamento assíncrono
-- **Não** chame a OpenAI dentro do handler do webhook. Responda `200` rápido e processe
-  em background.
-- Use **BullMQ + Redis** (fornecido) ou **SQS via LocalStack** (também fornecido) — sua escolha.
-
-### 4. Worker → OpenAI
-- O worker monta o contexto (histórico da conversa + `knowledge-base/`) e chama a OpenAI
-  para gerar a resposta.
-- A resposta deve se basear na base de conhecimento. Se a info não existir lá, o bot deve
-  dizer que não sabe (não inventar).
-- **Diferencial**: `function calling` para uma ação real (ex.: consultar status de um pedido
-  num endpoint mock).
-
-### 5. Envio da resposta
-- Envie a resposta via `POST http://mock-meta:8001/{phoneNumberId}/messages`
-  (mesma forma da API real da Meta). O mock loga o que recebeu.
-
-### 6. API REST mínima
-- `GET /conversations` — lista conversas (do tenant autenticado).
-- `GET /conversations/:id/messages` — mensagens de uma conversa.
-
-### 7. Aspectos transversais (é aqui que a gente repara)
-- **Idempotência**: a Meta reentrega o mesmo webhook (mesmo `message.id`). Não processe duas vezes.
-- **Multi-tenant**: cada cliente (tenant) só enxerga seus próprios dados.
-- **Resiliência**: erros na OpenAI/envio devem ter retry; o sistema não pode travar.
-- **Observabilidade**: logs estruturados que ajudem a depurar um atendimento específico.
+| Camada | Escolha | Motivo |
+|---|---|---|
+| HTTP | **Fastify** | Performance e captura simples do **raw body** (necessário para o HMAC). |
+| Banco | **PostgreSQL + Drizzle ORM** (postgres-js) | Tipagem forte, migrations versionadas; já no compose. |
+| Fila | **BullMQ + Redis** | Retry/backoff nativos; processo de worker separado. |
+| LLM | **OpenAI** (`gpt-4o-mini`) atrás de uma interface | Troca por um stub determinístico sem chave (ver abaixo). |
+| Validação | **Zod** | Valida o envelope do webhook e as variáveis de ambiente. |
+| Logs | **Pino** | Logging estruturado por conversa (observabilidade). |
+| Testes | **Vitest** | Unitários + integração. |
 
 ---
 
-## 📦 O que já fornecemos
+## Como rodar (do zero)
 
-| Item | Onde |
-|------|------|
-| Mock da Meta (dispara webhooks assinados + recebe envios) | [`mock-meta-server/`](mock-meta-server/) |
-| Base de conhecimento da empresa fictícia | [`knowledge-base/`](knowledge-base/) |
-| Infra local (Postgres, Redis, LocalStack, mock) | [`docker-compose.yml`](docker-compose.yml) |
-| Variáveis de ambiente de exemplo | [`.env.example`](.env.example) |
-| Esqueleto do projeto (package.json, tsconfig, drizzle) | raiz / [`src/`](src/) |
-| Guia para obter credenciais reais da Meta e OpenAI | [`SETUP-CREDENCIAIS.md`](SETUP-CREDENCIAIS.md) |
-
-> Você pode fazer **todo o desafio sem credenciais reais da Meta**, usando o mock. A OpenAI
-> exige uma API key (o guia explica como obter com baixíssimo custo). Se preferir, deixe a
-> chamada da LLM atrás de uma interface e forneça um "stub" — mas a integração real conta pontos.
-
----
-
-## 🚀 Como começar
+Pré-requisitos: **Node ≥ 20**, **Docker**. Rode os comandos a partir de `backend/`.
 
 ```bash
-# 1. Suba a infraestrutura (Postgres, Redis, LocalStack, mock da Meta)
+# 1. Infra (Postgres :5432, Redis :6379, mock-meta :8001)
 docker compose up -d
 
-# 2. Confira que o mock da Meta está no ar
-curl http://localhost:8001/health
+# 2. Dependências
+npm install
 
-# 3. Copie as variáveis de ambiente e preencha sua OPENAI_API_KEY
-cp .env.example .env
+# 3. Ambiente
+cp .env.example .env          # funciona sem editar (ver "Sem token OpenAI" abaixo)
 
-# 4. Instale dependências e desenvolva sua solução em src/
-npm install   # ou bun install / pnpm install
+# 4. Banco
+npm run db:migrate
+npm run db:seed               # cria o tenant de dev NeoFibra (api key: dev-api-key-neofibra)
 
-# 5. Quando seu webhook estiver no ar (porta 8000), simule uma mensagem de cliente:
-curl -X POST http://localhost:8001/simulate/inbound \
-  -H "Content-Type: application/json" \
-  -d '{ "from": "5511999990000", "text": "Quais são os planos de vocês?" }'
+# 5. Suba a API e o worker (dois terminais)
+npm run dev                   # API em http://localhost:8000
+npm run worker                # consumidor da fila
 
-# O mock vai ASSINAR o payload e chamar seu POST http://host.docker.internal:8000/webhook
-# Seu backend processa, chama a OpenAI e envia a resposta de volta pro mock.
+# 6. Simule uma mensagem de cliente (o mock assina e chama o /webhook)
+curl -X POST localhost:8001/simulate/inbound \
+  -H 'Content-Type: application/json' \
+  -d '{"from":"5511999990000","text":"Quais os planos e precos?"}'
+
+# 7. Veja a resposta entregue
+curl -s localhost:8001/sent
 ```
 
-A porta esperada do **seu** backend é a **8000**.
+### Sem token da OpenAI
+
+A integração com a LLM fica **atrás da interface `LlmProvider`**. Em runtime, `getLlmProvider()`
+escolhe:
+
+- **`OpenAiProvider`** quando há uma `OPENAI_API_KEY` válida (`gpt-4o-mini`, temperatura baixa);
+- **`StubProvider`** (determinístico, sem custo) caso contrário — faz um retrieval léxico na
+  base de conhecimento e responde ancorado nela, mantendo a postura anti-alucinação.
+
+Assim o fluxo roda **ponta a ponta sem chave** e os testes não dependem da OpenAI. Para usar a
+IA real, basta preencher `OPENAI_API_KEY` no `.env`.
 
 ---
 
-## 📤 Entrega
+## Variáveis de ambiente
 
-- Repositório Git (público ou com acesso) com **histórico de commits real** (não um único commit).
-- `README.md` próprio explicando: como rodar, suas decisões de arquitetura, **premissas** e
-  o que você deixaria para depois (e por quê).
-- Pelo menos **5 testes** cobrindo a lógica de negócio (validação de assinatura, idempotência,
-  serviço de conversa, etc.).
-
----
-
-## 🧮 Critérios de avaliação
-
-| Critério | Peso | O que olhamos |
-|----------|------|---------------|
-| Arquitetura & organização | 25% | Separação de responsabilidades, fronteiras claras, modularidade |
-| Corretude do fluxo assíncrono | 20% | Webhook responde rápido, worker processa, retry em falhas |
-| Segurança & idempotência | 20% | Assinatura validada, reentrega tratada, multi-tenant isolado |
-| Qualidade do código | 15% | Legibilidade, tipagem, tratamento de erros, naming |
-| Integração com a LLM | 10% | Contexto/RAG, respostas fiéis à base, controle de custo |
-| Testes | 10% | Cobrem cenários relevantes, não só caminho feliz |
+Todas validadas por Zod em `src/config/env.ts` (falha no boot se faltar algo essencial). Ver
+`.env.example`. Principais: `DATABASE_URL`, `REDIS_URL`, `OPENAI_API_KEY` (opcional),
+`OPENAI_MODEL`, `META_VERIFY_TOKEN`, `META_APP_SECRET`, `META_TOKEN`, `META_API_BASE_URL`,
+`META_PHONE_NUMBER_ID`, `PORT`, `LOG_LEVEL`.
 
 ---
 
-## 📋 Regras
+## Decisões de arquitetura
 
-- **Prazo**: 5 dias corridos a partir do recebimento.
-- **Linguagem**: Node.js + TypeScript.
-- Bibliotecas à sua escolha — documente o porquê das principais.
-- Pode usar IA como assistente. Mas **você precisa entender e defender cada decisão** —
-  na entrevista vamos conversar sobre o seu código.
+- **Camadas e fronteiras** — `http/` (rotas + auth), `messaging/` (ingest, contexto, entrega,
+  outbound, processamento), `llm/` (provider/prompt), `queue/`, `db/`, `knowledge-base/`. O
+  handler do webhook não faz trabalho pesado.
+- **Fluxo assíncrono** — o webhook valida, persiste e enfileira; responde 200 em milissegundos.
+  OpenAI/entrega só no worker.
+- **Segurança (HMAC)** — `X-Hub-Signature-256` validado sobre o **corpo cru** (preservado em
+  `http/app.ts` via `addContentTypeParser`), com comparação em tempo constante.
+- **Idempotência** — índice **único `(tenant_id, wa_message_id)`** + `onConflictDoNothing` no
+  insert da inbound; o webhook só enfileira quando a mensagem é nova. No worker, há ainda um
+  guard que sai cedo se a inbound já foi respondida.
+- **Multi-tenancy** — tenant resolvido pelo `phone_number_id` (webhook) ou pela **API key**
+  (`Authorization: Bearer …` na REST); **toda** query filtra `tenant_id`.
+- **Resiliência** — retry/backoff exponencial nativo do BullMQ. A **entrega ocorre antes** de
+  qualquer escrita no banco: falha de entrega dispara retry sem deixar resposta órfã.
+  (Trade-off consciente: entrega *at-least-once* — num cenário raro de falha após entregar e
+  antes de persistir, pode haver reenvio.)
+- **Anti-alucinação** — system prompt ancorado na KB com instrução explícita de admitir quando
+  a informação não está na base, em vez de inventar.
 
-Boa sorte! 🚀
+---
+
+## API REST
+
+Autenticação por tenant: `Authorization: Bearer <api_key>` (ou `x-api-key`).
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/health` | Healthcheck. |
+| GET | `/webhook` | Handshake de verificação da Meta. |
+| POST | `/webhook` | Recebimento de mensagens (HMAC). |
+| GET | `/conversations` | Conversas do tenant autenticado. |
+| GET | `/conversations/:id/messages` | Mensagens de uma conversa (do tenant). |
+
+```bash
+curl localhost:8000/conversations -H 'Authorization: Bearer dev-api-key-neofibra'
+```
+
+---
+
+## Testes
+
+```bash
+npm test          # vitest
+npm run typecheck
+```
+
+**32 testes** (30 unitários + 2 de integração). Cobrem:
+
+- **HMAC** válido/inválido/adulterado (`lib/signature`);
+- **Parse** do webhook com Zod (`webhook/meta-schema`);
+- **Entrega** no formato Meta e *throw* em falha para acionar o retry (`messaging/delivery`);
+- **Worker**: idempotência (sai cedo se já respondido) e propagação de erro (`process-incoming`);
+- **Rota do webhook** via `app.inject`: 403 em assinatura inválida, enfileiramento de mensagem
+  nova, **dedupe idempotente** em reentrega e **isolamento multi-tenant** (`http/webhook-routes`);
+- **Integração com Postgres real**: idempotência por reentrega e isolamento por tenant
+  (`messaging/ingest.integration`) — **pulados automaticamente quando não há banco**, então
+  `npm test` fica verde sem docker e roda de verdade com `docker compose up`.
+
+Os testes não dependem da OpenAI (usam o `StubProvider`/mocks).
+
+---
+
+## Observabilidade
+
+Logs estruturados com Pino. No fluxo de mensagem, cada log carrega
+`tenantId` / `conversationId` / `waMessageId`, permitindo rastrear um atendimento específico.
+
+---
+
+## Premissas
+
+- Apenas mensagens de **texto** são processadas; outros tipos são ignorados com segurança.
+- A KB é pequena (~3,5 KB) → injetada como **contexto direto** no prompt (sem RAG vetorial),
+  o que é mais simples e confiável para esse volume.
+- O `mock-meta` substitui a Meta real; com credenciais reais, basta apontar `META_API_BASE_URL`.
+
+---
+
+## Deixado para depois (e por quê)
+
+- **Function calling** (ex.: consultar status de pedido num endpoint mock) — bônus; o foco foi
+  arquitetura, async, segurança e idempotência.
+- **Paginação/filtros** na REST — fora do escopo mínimo.
+- **RAG vetorial** — desnecessário para o tamanho atual da base.
+- **Dead-letter queue / métricas** — o retry/backoff do BullMQ cobre o essencial do desafio.
+
+---
+
+## Estrutura
+
+```
+src/
+  config/env.ts          # env validado (Zod)
+  db/                    # schema (Drizzle), client, seed
+  http/                  # app (raw body p/ HMAC), auth, rotas (webhook, conversations)
+  lib/                   # signature (HMAC), logger (Pino)
+  messaging/             # ingest, context, delivery, outbound, process-incoming
+  llm/                   # provider (OpenAI | Stub), prompt, tipos
+  knowledge-base/        # carregamento da KB
+  queue/                 # fila BullMQ
+  index.ts               # API
+  worker.ts              # consumidor da fila
+knowledge-base/          # base de conhecimento (NeoFibra)
+mock-meta-server/        # mock da Meta (fornecido)
+```
