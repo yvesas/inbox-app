@@ -1,8 +1,7 @@
-# Material privado do desafio e de planejamento — NÃO publicar
-desafio.txt
-desafio.png
-plano-backend-nodejs.md
-plano-frontend-nextjs.md
+# Material
+*.txt
+*.png
+*.md
 _interviewer/
 .claude/
 
