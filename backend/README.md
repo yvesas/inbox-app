@@ -159,19 +159,29 @@ npm test          # vitest
 npm run typecheck
 ```
 
-**32 testes** (30 unitários + 2 de integração). Cobrem:
+**47 testes** (unitários + integração). Cobrem:
 
 - **HMAC** válido/inválido/adulterado (`lib/signature`);
 - **Parse** do webhook com Zod (`webhook/meta-schema`);
 - **Entrega** no formato Meta e *throw* em falha para acionar o retry (`messaging/delivery`);
+- **Seleção de provedor** (`getLlmProvider`: stub sem chave, OpenAI com chave válida ou com
+  baseURL fake) e **OpenAiProvider** com a SDK mockada — montagem da chamada e parsing (`llm/*`);
 - **Worker**: idempotência (sai cedo se já respondido) e propagação de erro (`process-incoming`);
 - **Rota do webhook** via `app.inject`: 403 em assinatura inválida, enfileiramento de mensagem
   nova, **dedupe idempotente** em reentrega e **isolamento multi-tenant** (`http/webhook-routes`);
-- **Integração com Postgres real**: idempotência por reentrega e isolamento por tenant
-  (`messaging/ingest.integration`) — **pulados automaticamente quando não há banco**, então
-  `npm test` fica verde sem docker e roda de verdade com `docker compose up`.
+- **REST de conversas** e carregamento da **KB** (`http/conversation-routes`, `knowledge-base/kb`).
 
-Os testes não dependem da OpenAI (usam o `StubProvider`/mocks).
+Três suítes de **integração** rodam contra dependências reais e são **puladas automaticamente
+quando o serviço não está no ar** — `npm test` fica verde sem docker e roda de verdade com
+`docker compose up`:
+
+- **Postgres real** — idempotência por reentrega e isolamento por tenant (`messaging/ingest.integration`);
+- **Redis + BullMQ real** — o worker recebe o payload enfileirado e o **retry/backoff** reprocessa
+  um job que falha (`queue/queue.integration`);
+- **mock-openai real** — o `OpenAiProvider` fala HTTP de verdade com a API compatível e faz o
+  parsing da resposta, exercitando o caminho da IA offline (`llm/openai-provider.integration`).
+
+Os testes não dependem da OpenAI real (usam `StubProvider`, mocks ou o mock-openai).
 
 ---
 

@@ -33,3 +33,25 @@ Hooks ativos:
 
 Cada app tem sua própria config de Prettier/ESLint; o runner do lint-staged usa o ferramental
 da app a que o arquivo pertence.
+
+## Fluxo de trabalho (Git)
+
+Histórico **incremental e real** é critério de avaliação — um commit por unidade lógica de
+trabalho, evitando um único commit gigante no fim.
+
+- **Branch por fase/feature**, a partir da `main`: `feat/<escopo>`, `fix/<escopo>`,
+  `test/<escopo>`, `docs/<escopo>`, `chore/<escopo>`. Ex.: `feat/fase-2-worker-llm`.
+- **Conventional Commits com escopo da app, em pt-BR**: `tipo(escopo): descrição no imperativo`.
+  Escopo = `backend` ou `frontend`. Tipos: `feat`, `fix`, `test`, `chore`, `refactor`, `docs`.
+  Ex.: `feat(backend): worker assíncrono com geração de resposta (LLM) e entrega via Meta`.
+- **Pull Request + merge** ao concluir cada fase (merge commit, mantendo o histórico do PR).
+- Após o merge, **remova a branch** (local e remota) para manter o repositório limpo.
+
+### `main` protegida
+
+A `main` tem branch protection no GitHub:
+
+- merge só via **Pull Request** (sem push direto);
+- **CI verde obrigatório** — o check `backend (lint · typecheck · test · build)` precisa passar,
+  com a branch atualizada em relação à `main`, antes do merge;
+- **force-push e deleção bloqueados**.
