@@ -2,6 +2,12 @@ import type { Message } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatTime } from "@/lib/format";
 
+const STATUS_LABEL: Record<Message["status"], string> = {
+  sent: "Enviada",
+  delivered: "Entregue",
+  read: "Lida",
+};
+
 /** Bolha de mensagem. `out` (agente) à direita/verde; `in` (cliente) à esquerda/branca. */
 export function MessageBubble({ message }: { message: Message }) {
   const isOut = message.direction === "out";
@@ -19,17 +25,28 @@ export function MessageBubble({ message }: { message: Message }) {
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.body}</p>
-        <time
-          dateTime={message.createdAt}
-          suppressHydrationWarning
+        <span
           className={cn(
-            "mt-1 block text-right text-[10px]",
+            "mt-1 flex items-center justify-end gap-1 text-[10px]",
             isOut ? "text-green-100" : "text-neutral-400",
           )}
         >
-          {formatTime(message.createdAt)}
-          {isOut && pending && " · enviando…"}
-        </time>
+          <time dateTime={message.createdAt} suppressHydrationWarning>
+            {formatTime(message.createdAt)}
+          </time>
+          {isOut &&
+            (pending ? (
+              <span aria-label="Enviando">🕓</span>
+            ) : (
+              <span
+                aria-label={STATUS_LABEL[message.status]}
+                title={STATUS_LABEL[message.status]}
+                className={cn(message.status === "read" && "text-sky-300")}
+              >
+                {message.status === "sent" ? "✓" : "✓✓"}
+              </span>
+            ))}
+        </span>
       </div>
     </li>
   );

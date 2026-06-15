@@ -20,9 +20,9 @@ export function ConversationItem({
         href={`/inbox/${id}`}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex items-center gap-3 px-4 py-3 transition-colors",
-          "hover:bg-neutral-50 focus-visible:bg-neutral-50 focus-visible:outline-none",
-          active && "bg-neutral-100 hover:bg-neutral-100",
+          "flex items-center gap-3 border-l-2 px-4 py-3 transition-colors",
+          "hover:bg-neutral-50 focus-visible:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-green-600",
+          active ? "border-green-600 bg-neutral-100 hover:bg-neutral-100" : "border-transparent",
         )}
       >
         <Avatar name={contactName} color={avatarColor} />
