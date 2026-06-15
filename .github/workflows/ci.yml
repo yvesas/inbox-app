@@ -1,7 +1,8 @@
 name: CI
 
-# Dispara em PRs e em push na main. (Monorepo: por enquanto só o backend está
-# ativo; quando houver CI de frontend, separar em jobs/paths.)
+# Dispara em PRs e em push na main. Monorepo com um job por app (backend e
+# frontend). Sem filtro de path de propósito: assim os checks obrigatórios da
+# branch protection sempre reportam, mesmo num PR que toque só uma das apps.
 on:
   pull_request:
   push:
@@ -82,6 +83,43 @@ jobs:
           name: coverage-backend
           path: backend/coverage/lcov.info
           if-no-files-found: ignore
+
+      - name: Build
+        run: npm run build
+
+  frontend:
+    name: frontend (lint · typecheck · build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    env:
+      # URL pública do backend hospedado (consumida no build do bundle client).
+      # Há fallback em lib/api.ts, mas fixamos para um build representativo.
+      NEXT_PUBLIC_API_URL: https://8tymn68hp9.execute-api.us-east-1.amazonaws.com
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Formatação (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build
         run: npm run build
