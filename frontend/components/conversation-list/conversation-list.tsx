@@ -50,11 +50,11 @@ export function ConversationList() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <nav aria-label="Conversas" className="min-h-0 flex-1 overflow-y-auto">
         {isLoading && <ListSkeleton />}
 
         {isError && (
-          <div className="p-4 text-sm text-red-600">
+          <div role="alert" className="p-4 text-sm text-red-600">
             <p>Não foi possível carregar as conversas.</p>
             <button
               onClick={() => void refetch()}
@@ -78,14 +78,15 @@ export function ConversationList() {
             ))}
           </ul>
         )}
-      </div>
+      </nav>
     </div>
   );
 }
 
 function ListSkeleton() {
   return (
-    <ul className="divide-y divide-neutral-100">
+    <ul role="status" aria-busy="true" className="divide-y divide-neutral-100">
+      <li className="sr-only">Carregando conversas…</li>
       {Array.from({ length: 8 }).map((_, i) => (
         <li key={i} className="flex items-center gap-3 px-4 py-3">
           <Skeleton className="h-10 w-10 rounded-full" />
