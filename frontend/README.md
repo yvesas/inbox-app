@@ -61,11 +61,57 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-Abra <http://localhost:3000> — a página inicial faz uma **verificação de conexão** com a API.
-Se aparecer "✓ Conectado", está tudo pronto para você construir.
+Abra <http://localhost:3000> — a raiz **redireciona para `/inbox`**, a interface principal.
 
-> O que já entregamos: projeto Next.js configurado (App Router, Tailwind, React Query, Axios),
-> `lib/api.ts` tipado e um exemplo mínimo de chamada. **As telas são por sua conta.**
+```bash
+npm run build       # deliverable: precisa passar limpo
+npm run typecheck
+npm run lint
+```
+
+---
+
+## ✅ Implementação — decisões de arquitetura
+
+Inbox de atendimento completo: lista de conversas com busca, chat com envio otimista, sugestão
+de IA, estados de loading/erro/vazio, responsivo e com live updates por polling.
+
+### Server vs Client (consciente)
+
+- **Server Components** — o *shell*: `app/inbox/layout.tsx` (compõe a casca) e as páginas de rota
+  (`inbox/page.tsx` estado vazio; `inbox/[conversationId]/page.tsx` resolve o param e delega).
+  Não carregam JS de interação à toa.
+- **Client Components** (`'use client'`) — tudo que tem estado/interação: a lista (busca + polling),
+  o chat, o composer (envio + IA) e a casca responsiva (`InboxShell`, que lê o segmento de rota
+  para alternar lista↔chat no mobile). A fronteira fica nas folhas, não no topo.
+
+### Data fetching & estado (React Query)
+
+- Hooks centralizados em **`lib/queries.ts`**; chaves em **`lib/query-keys.ts`** (invalidação
+  consistente, sem strings soltas).
+- **Optimistic update** no envio (`useSendMessage`): `onMutate` injeta a mensagem provisória no
+  cache → `onError` faz rollback → `onSettled` invalida `messages` + `conversations` (reconcilia e
+  atualiza a prévia da lista). O caminho de erro é tratado de propósito.
+- **Sugestão de IA** (`useSuggestReply`): `useMutation` que **não** escreve no cache de mensagens —
+  só devolve o texto para o composer (rascunho editável).
+- **Sem waterfall**: o cabeçalho do chat reusa o contato do cache de `useConversations` em vez de
+  um refetch dedicado.
+- **Live updates**: polling com `refetchInterval` (conversas 8s, mensagens 5s) sincronizando lista
+  e chat.
+
+### Estrutura
+
+```
+app/inbox/{layout,page}.tsx + app/inbox/[conversationId]/page.tsx
+components/{conversation-list, chat, ai, ui} + components/inbox-shell.tsx
+lib/{api.ts (fornecido), queries.ts, query-keys.ts, cn.ts, format.ts}
+```
+
+### O que faria com mais tempo
+
+- Testes (React Testing Library) cobrindo o optimistic e o rollback.
+- Prefetch on hover do item da lista; virtualização para listas muito longas.
+- WebSocket/SSE no lugar do polling, se o backend expusesse.
 
 ---
 
