@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildChatMessages, buildSystemPrompt } from "./prompt.js";
-import { isUsableOpenAiKey } from "./index.js";
+import { getLlmProvider, isUsableOpenAiKey } from "./index.js";
 
 describe("buildSystemPrompt", () => {
   it("ancora o prompt na base e instrui contra alucinação", () => {
@@ -38,5 +38,23 @@ describe("isUsableOpenAiKey", () => {
     expect(isUsableOpenAiKey(undefined)).toBe(false);
     expect(isUsableOpenAiKey("sk-proj-troque-pela-sua-chave")).toBe(false);
     expect(isUsableOpenAiKey("não-é-uma-chave")).toBe(false);
+  });
+});
+
+describe("getLlmProvider (seleção de provedor)", () => {
+  it("usa o stub sem chave e sem baseURL", () => {
+    expect(getLlmProvider({ apiKey: "", baseURL: "" }).name).toBe("stub");
+  });
+
+  it("usa OpenAI com baseURL (fake) + chave fictícia", () => {
+    expect(getLlmProvider({ apiKey: "fake-key", baseURL: "http://localhost:8002/v1" }).name).toBe(
+      "openai",
+    );
+  });
+
+  it("usa OpenAI com chave válida", () => {
+    expect(getLlmProvider({ apiKey: "sk-proj-" + "a".repeat(40), baseURL: "" }).name).toBe(
+      "openai",
+    );
   });
 });
