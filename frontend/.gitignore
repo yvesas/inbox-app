@@ -31,3 +31,8 @@ _interviewer/
 
 # typescript build info
 *.tsbuildinfo
+
+# playwright (e2e)
+/test-results/
+/playwright-report/
+/playwright/.cache/

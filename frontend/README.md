@@ -105,11 +105,28 @@ de IA, estados de loading/erro/vazio, responsivo e com live updates por polling.
 app/inbox/{layout,page}.tsx + app/inbox/[conversationId]/page.tsx
 components/{conversation-list, chat, ai, ui} + components/inbox-shell.tsx
 lib/{api.ts (fornecido), queries.ts, query-keys.ts, cn.ts, format.ts}
+e2e/inbox.spec.ts + playwright.config.ts
 ```
+
+### Testes E2E (Playwright)
+
+Fluxo ponta a ponta versionado em `e2e/`, rodando **100% local e determinístico**: o Playwright
+sobe o backend mock fornecido (`server/local.mjs`, store em memória) e o Next apontado para ele
+(`NEXT_PUBLIC_API_URL`), sem rede nem dados reais.
+
+```bash
+npm run e2e          # roda os specs (sobe mock + app automaticamente)
+npm run e2e:ui       # modo interativo
+npm run e2e:report   # abre o último relatório HTML
+```
+
+Cobre: listar conversas (ordem por última mensagem), busca, abrir conversa e ver o histórico,
+**enviar com optimistic**, **sugestão de IA** populando o composer e o estado vazio. Fica **fora
+do CI** de propósito (pipeline leve); roda sob demanda.
 
 ### O que faria com mais tempo
 
-- Testes (React Testing Library) cobrindo o optimistic e o rollback.
+- Testes de unidade/componente (React Testing Library) cobrindo o optimistic e o rollback de erro.
 - Prefetch on hover do item da lista; virtualização para listas muito longas.
 - WebSocket/SSE no lugar do polling, se o backend expusesse.
 
