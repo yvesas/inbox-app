@@ -8,9 +8,9 @@ escolha o que quer rodar:
 | **[`backend/`](./backend)** | API Node.js + TypeScript: webhook da Meta → fila → worker → OpenAI (ancorada numa base de conhecimento) → resposta. Multi-tenant, idempotente, observável. | precisa de **Docker** | [`backend/README.md`](./backend/README.md) |
 | **[`frontend/`](./frontend)** | Inbox de atendimento em Next.js (App Router): lista, chat, envio com optimistic e sugestão de IA. | só **Node ≥20** | [`frontend/README.md`](./frontend/README.md) |
 
-> ⚠️ **As duas partes são independentes.** O `frontend/` **não** consome o `backend/` deste repo —
-> ele fala com uma API hospedada (ou com um mock local próprio). Não é preciso subir o backend
-> para rodar o frontend.
+> Por padrão as duas partes são **independentes**: o `frontend/` fala com uma API hospedada (ou um
+> mock local próprio), sem precisar do backend. Mas há também um **modo unificado em Docker** em que
+> o frontend consome o backend deste repo (via as rotas `/ui`) — veja [🐳 Docker](#-docker).
 
 ---
 
@@ -50,6 +50,40 @@ Build (deliverable): `npm run build`. E2E local (Playwright + mock): `npm run e2
 Detalhes completos no [README do frontend](./frontend/README.md).
 
 ---
+
+## 🐳 Docker
+
+Três formas de rodar em container, todas com **Docker** + **Docker Compose**:
+
+### 1. Monorepo unificado (frontend consome o backend)
+
+Da **raiz**, sobe tudo junto — Postgres, Redis, mock-meta, API, worker e frontend — com o
+frontend consumindo o backend via as rotas **`/ui`** (um BFF que adapta o backend ao contrato
+da inbox). Inclui dados de demonstração (seed).
+
+```bash
+docker compose up --build
+# frontend:  http://localhost:3000   (consome http://localhost:8000/ui)
+# API:       http://localhost:8000   ·   mock-meta: http://localhost:8001
+```
+
+> O `NEXT_PUBLIC_API_URL` é inlinado **no build** do frontend e aponta para `http://localhost:8000/ui`
+> (precisa ser alcançável pelo navegador, não pela rede interna do Docker).
+
+### 2. Só o backend, em Docker
+
+```bash
+cd backend
+WEBHOOK_URL=http://api:8000/webhook docker compose --profile app up --build
+# API :8000 · worker · infra. Sem o profile "app", sobe só a infra (e você roda a app no host).
+```
+
+### 3. Só o frontend, em Docker (com o mock local)
+
+```bash
+cd frontend
+docker compose up --build           # inbox em :3000 consumindo o mock em :4000
+```
 
 ## Estrutura
 
