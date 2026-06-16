@@ -1,23 +1,70 @@
-# inbox-app
+# inbox-app — Atendimento WhatsApp com IA (Myde)
 
-Monorepo do projeto: atendimento ao cliente via WhatsApp com IA.
+Monorepo com **dois desafios técnicos independentes** da Myde. Cada um roda, é testado e é
+avaliado **por conta própria** — escolha o que quer rodar:
 
-São duas aplicações independentes:
+| Projeto | O que é | Rodar | Detalhes |
+|---|---|---|---|
+| **[`backend/`](./backend)** | API Node.js + TypeScript: webhook da Meta → fila → worker → OpenAI (ancorada numa base de conhecimento) → resposta. Multi-tenant, idempotente, observável. | precisa de **Docker** | [`backend/README.md`](./backend/README.md) |
+| **[`frontend/`](./frontend)** | Inbox de atendimento em Next.js (App Router): lista, chat, envio com optimistic e sugestão de IA. | só **Node ≥20** | [`frontend/README.md`](./frontend/README.md) |
 
-- **[`backend/`](./backend)** — API em Node.js + TypeScript. Recebe mensagens via webhook
-  (WhatsApp Cloud API da Meta), processa de forma assíncrona com OpenAI ancorado numa base
-  de conhecimento e responde automaticamente. Detalhes em [`backend/README.md`](./backend/README.md).
+> ⚠️ **As duas partes são independentes.** O `frontend/` **não** consome o `backend/` deste repo —
+> ele fala com uma API hospedada (ou com um mock local próprio). Não é preciso subir o backend
+> para rodar o frontend.
 
-- **[`frontend/`](./frontend)** — Inbox de atendimento em Next.js (App Router). Consome a API
-  para listar conversas, exibir o chat, enviar mensagens e sugerir respostas com IA.
-  Detalhes em [`frontend/README.md`](./frontend/README.md).
+---
 
-Cada aplicação tem seu próprio `package.json`, dependências e instruções de execução.
+## ⚡ Rodar rápido
 
-## Desenvolvimento
+Cada projeto tem seu próprio `package.json`. Rode os comandos **dentro da pasta do projeto**.
 
-Este monorepo usa **Husky + lint-staged** (na raiz) para padronizar os commits. Ao clonar,
-instale as dependências da raiz **uma vez** para ativar os git hooks:
+### Backend (`cd backend`) — requer Docker
+
+```bash
+docker compose up -d              # postgres, redis, mock-meta, mock-openai
+npm install
+cp .env.example .env              # funciona sem editar (cai no StubProvider, sem custo)
+npm run db:migrate && npm run db:seed
+npm run dev                       # API em http://localhost:8000
+npm run worker                    # (outro terminal) consumidor da fila
+
+# simular uma mensagem de cliente ponta a ponta:
+curl -X POST localhost:8001/simulate/inbound \
+  -H 'Content-Type: application/json' \
+  -d '{"from":"5511999990000","text":"Quais os planos e precos?"}'
+curl -s localhost:8001/sent       # vê a resposta entregue
+```
+
+Atalho: `npm run stack` sobe infra + migrate + seed + API + worker num comando.
+Testes: `npm test`. Detalhes completos no [README do backend](./backend/README.md).
+
+### Frontend (`cd frontend`) — só Node
+
+```bash
+npm install
+cp .env.example .env.local         # já vem com a URL da API hospedada
+npm run dev                        # http://localhost:3000 (redireciona para /inbox)
+```
+
+Build (deliverable): `npm run build`. E2E local (Playwright + mock): `npm run e2e`.
+Detalhes completos no [README do frontend](./frontend/README.md).
+
+---
+
+## Estrutura
+
+```
+inbox-app/
+  backend/    # desafio backend (Node + TS, Fastify, Drizzle, BullMQ, OpenAI)
+  frontend/   # desafio frontend (Next.js 15, React 19, React Query, Tailwind v4)
+```
+
+---
+
+## Desenvolvimento (opcional — para contribuir)
+
+O monorepo usa **Husky + lint-staged** (na raiz) para padronizar os commits. Ao clonar, instale
+as dependências da raiz **uma vez** para ativar os git hooks:
 
 ```bash
 npm install            # na raiz — instala husky e registra os hooks
@@ -52,6 +99,7 @@ trabalho, evitando um único commit gigante no fim.
 A `main` tem branch protection no GitHub:
 
 - merge só via **Pull Request** (sem push direto);
-- **CI verde obrigatório** — o check `backend (lint · typecheck · test · build)` precisa passar,
-  com a branch atualizada em relação à `main`, antes do merge;
+- **CI verde obrigatório** — os checks `backend (lint · typecheck · test · build)` e
+  `frontend (lint · typecheck · build)` precisam passar, com a branch atualizada em relação à
+  `main`, antes do merge;
 - **force-push e deleção bloqueados**.

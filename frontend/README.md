@@ -1,14 +1,28 @@
-# Desafio Técnico — Desenvolvedor(a) Frontend (Next.js)
+# Inbox de Atendimento WhatsApp — Frontend (Next.js)
 
-> **Inbox de Atendimento WhatsApp com IA** — construa a interface; o backend já está pronto.
+> Desafio técnico — Desenvolvedor(a) Frontend. Inbox de atendimento que consome a API fornecida:
+> lista de conversas, chat, envio com **optimistic update** e **sugestão de IA**.
 
-Bem-vindo(a)! Neste desafio você vai construir o **frontend** de um painel de atendimento via
-WhatsApp, parecido com o que usamos no dia a dia. **O backend já está implementado e hospedado**
-— você foca 100% na experiência, na arquitetura de componentes e nas decisões de frontend.
+## ⚡ Quickstart (para avaliar)
 
-Não buscamos pixel-perfect. Buscamos entender **como você pensa** em Next.js: o que é Server
-e o que é Client Component, como busca e sincroniza dados, como trata estados de carregamento
-e erro, e como organiza o código.
+Pré-requisito único: **Node ≥ 20** (não precisa de Docker nem do backend deste repo).
+
+```bash
+npm install
+cp .env.example .env.local       # já vem com a URL da API hospedada
+npm run dev                      # http://localhost:3000 → redireciona para /inbox
+```
+
+Outros comandos úteis:
+
+```bash
+npm run build                    # build de produção (deliverable — precisa passar)
+npm run typecheck                # tsc --noEmit
+npm run e2e                      # E2E (Playwright) contra um mock local determinístico
+```
+
+> A app aponta para a API hospedada por padrão (`.env.local`). Para rodar 100% offline, suba o
+> mock incluso: `cd server && node local.mjs` e ajuste `NEXT_PUBLIC_API_URL=http://localhost:4000`.
 
 ---
 
@@ -47,27 +61,6 @@ NEXT_PUBLIC_API_URL=https://8tymn68hp9.execute-api.us-east-1.amazonaws.com
 
 O cliente HTTP e os tipos já vêm prontos em [`lib/api.ts`](lib/api.ts). Se preferir rodar o
 backend localmente (offline), veja [`server/README.md`](server/README.md).
-
----
-
-## 🚀 Como começar
-
-```bash
-# 1. Configure a URL da API (já vem preenchida com a URL hospedada)
-cp .env.example .env.local
-
-# 2. Instale e rode
-npm install
-npm run dev          # http://localhost:3000
-```
-
-Abra <http://localhost:3000> — a raiz **redireciona para `/inbox`**, a interface principal.
-
-```bash
-npm run build       # deliverable: precisa passar limpo
-npm run typecheck
-npm run lint
-```
 
 ---
 
