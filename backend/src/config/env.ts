@@ -24,6 +24,10 @@ const envSchema = z.object({
   META_TOKEN: z.string().default("mock-token"),
   META_API_BASE_URL: z.string().default("http://localhost:8001"),
   META_PHONE_NUMBER_ID: z.string(),
+
+  // Tenant servido pelas rotas /ui (BFF que o frontend consome sem auth).
+  // Por padrão, o tenant de desenvolvimento criado pelo seed (NeoFibra).
+  UI_TENANT_API_KEY: z.string().default("dev-api-key-neofibra"),
 });
 
 export const env = envSchema.parse(process.env);

@@ -1,7 +1,9 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import cors from "@fastify/cors";
 import { env } from "../config/env.js";
 import { registerWebhookRoutes } from "./webhook-routes.js";
 import { registerConversationRoutes } from "./conversation-routes.js";
+import { registerUiRoutes } from "../ui/routes.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -40,10 +42,14 @@ export function buildApp(): FastifyInstance {
     }
   });
 
+  // CORS para o frontend consumir o BFF (/ui) de outra origem (porta 3000 → 8000).
+  void app.register(cors, { origin: true, methods: ["GET", "POST", "OPTIONS"] });
+
   app.get("/health", async () => ({ ok: true }));
 
   void registerWebhookRoutes(app);
   void registerConversationRoutes(app);
+  void registerUiRoutes(app);
 
   return app;
 }
