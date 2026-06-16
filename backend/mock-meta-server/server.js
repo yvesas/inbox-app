@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { createHmac, randomUUID } from "node:crypto";
 
 /**
- * Mock da Meta WhatsApp Cloud API para o desafio de backend.
+ * Mock da Meta WhatsApp Cloud API.
  *
  * Endpoints:
  *   GET  /health                         → status

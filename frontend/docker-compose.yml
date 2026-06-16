@@ -1,4 +1,4 @@
-# Opcional: roda o backend fornecido localmente (store em memória, porta 4000).
+# Opcional: roda o backend mock localmente (store em memória, porta 4000).
 # Alternativa sem Docker:  cd server && node local.mjs
 services:
   api:

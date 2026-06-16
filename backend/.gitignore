@@ -11,5 +11,5 @@ coverage/
 .idea/
 .vscode/
 
-# Material exclusivo do entrevistador — NUNCA versionar no repo público.
+# Material privado — NUNCA versionar no repo público.
 _interviewer/

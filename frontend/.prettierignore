@@ -6,5 +6,5 @@ coverage
 package-lock.json
 server
 
-# Docs do desafio — não reformatar
+# Docs do projeto — não reformatar
 *.md

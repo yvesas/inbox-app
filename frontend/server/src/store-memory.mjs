@@ -1,5 +1,5 @@
 // Armazenamento em memória — usado no desenvolvimento local (sem AWS).
-// Os dados reiniciam a cada restart do processo (suficiente para o desafio).
+// Os dados reiniciam a cada restart do processo (suficiente para desenvolvimento local).
 
 import { conversations as seedConversations, messages as seedMessages } from "./seed.mjs";
 

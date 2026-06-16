@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Mock da Meta WhatsApp Cloud API para o desafio de backend",
+  "description": "Mock da Meta WhatsApp Cloud API",
   "scripts": {
     "start": "node server.js"
   }

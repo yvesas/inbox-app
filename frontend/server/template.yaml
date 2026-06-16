@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Backend do desafio de frontend — inbox de atendimento WhatsApp + IA
+Description: Backend (mock) do inbox de atendimento WhatsApp + IA
 
 Parameters:
   SeedToken:

@@ -1,7 +1,7 @@
-# inbox-app — Atendimento WhatsApp com IA (Myde)
+# inbox-app — Atendimento WhatsApp com IA
 
-Monorepo com **dois desafios técnicos independentes** da Myde. Cada um roda, é testado e é
-avaliado **por conta própria** — escolha o que quer rodar:
+Monorepo com **dois projetos independentes**. Cada um roda e é testado **por conta própria** —
+escolha o que quer rodar:
 
 | Projeto | O que é | Rodar | Detalhes |
 |---|---|---|---|
@@ -55,8 +55,8 @@ Detalhes completos no [README do frontend](./frontend/README.md).
 
 ```
 inbox-app/
-  backend/    # desafio backend (Node + TS, Fastify, Drizzle, BullMQ, OpenAI)
-  frontend/   # desafio frontend (Next.js 15, React 19, React Query, Tailwind v4)
+  backend/    # API de atendimento (Node + TS, Fastify, Drizzle, BullMQ, OpenAI)
+  frontend/   # inbox de atendimento (Next.js 15, React 19, React Query, Tailwind v4)
 ```
 
 ---
@@ -83,8 +83,8 @@ da app a que o arquivo pertence.
 
 ## Fluxo de trabalho (Git)
 
-Histórico **incremental e real** é critério de avaliação — um commit por unidade lógica de
-trabalho, evitando um único commit gigante no fim.
+Histórico **incremental e real** — um commit por unidade lógica de trabalho, evitando um único
+commit gigante no fim.
 
 - **Branch por fase/feature**, a partir da `main`: `feat/<escopo>`, `fix/<escopo>`,
   `test/<escopo>`, `docs/<escopo>`, `chore/<escopo>`. Ex.: `feat/fase-2-worker-llm`.

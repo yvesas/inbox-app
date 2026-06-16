@@ -26,7 +26,7 @@ coverage/
 # packaged SAM output
 server/packaged.yaml
 
-# Material exclusivo do entrevistador — NUNCA versionar no repo público.
+# Material privado — NUNCA versionar no repo público.
 _interviewer/
 
 # typescript build info
