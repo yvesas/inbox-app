@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Inbox de Atendimento — Desafio Frontend",
-  description: "Desafio técnico frontend Myde",
+  title: "Inbox de Atendimento",
+  description: "Inbox de atendimento ao cliente via WhatsApp com IA",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

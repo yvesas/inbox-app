@@ -1,9 +1,9 @@
 # Inbox de Atendimento WhatsApp — Frontend (Next.js)
 
-> Desafio técnico — Desenvolvedor(a) Frontend. Inbox de atendimento que consome a API fornecida:
-> lista de conversas, chat, envio com **optimistic update** e **sugestão de IA**.
+> Inbox de atendimento ao cliente que consome uma API de mensagens: lista de conversas, chat,
+> envio com **optimistic update** e **sugestão de IA**.
 
-## ⚡ Quickstart (para avaliar)
+## ⚡ Quickstart
 
 Pré-requisito único: **Node ≥ 20** (não precisa de Docker nem do backend deste repo).
 
@@ -16,40 +16,32 @@ npm run dev                      # http://localhost:3000 → redireciona para /i
 Outros comandos úteis:
 
 ```bash
-npm run build                    # build de produção (deliverable — precisa passar)
+npm run build                    # build de produção (precisa passar limpo)
 npm run typecheck                # tsc --noEmit
 npm run e2e                      # E2E (Playwright) contra um mock local determinístico
 ```
 
-> A app aponta para a API hospedada por padrão (`.env.local`). Para rodar 100% offline, suba o
-> mock incluso: `cd server && node local.mjs` e ajuste `NEXT_PUBLIC_API_URL=http://localhost:4000`.
+> A app aponta para uma API hospedada por padrão (`.env.local`). Para rodar 100% offline, suba o
+> mock incluído: `cd server && node local.mjs` e ajuste `NEXT_PUBLIC_API_URL=http://localhost:4000`.
 
 ---
 
-## 🎯 O que você vai construir
-
-Um app **Next.js (App Router)** que consome a API fornecida e entrega:
+## 🎯 Funcionalidades
 
 1. **Lista de conversas** — contato, última mensagem, horário, indicador de não-lidas, busca/filtro.
 2. **Tela de chat** — histórico de mensagens (bolhas separando cliente × atendente), timestamps.
 3. **Envio de mensagem** — com **atualização otimista** (a mensagem aparece antes da confirmação).
 4. **Sugerir resposta com IA** — botão que chama `/ai/suggest` e preenche o campo com a sugestão
-   (o backend faz o proxy da OpenAI; a chave nunca chega ao browser).
-5. **Estados** — loading, erro e vazio bem tratados; acessibilidade básica.
-6. **Atualização** — manter a lista e o chat atualizados (polling com React Query já é
-   suficiente; soluções melhores são diferencial — explique sua escolha).
+   (a API faz o proxy da OpenAI; a chave nunca chega ao browser).
+5. **Estados** — loading, erro e vazio bem tratados; acessibilidade.
+6. **Live updates** — lista e chat sincronizados por polling com React Query.
 
 ---
 
-## 🔌 Backend fornecido
+## 🔌 API consumida
 
-Você **não precisa** implementar nem rodar o backend — ele já está no ar.
-
-**URL da API (já configurada para você):**
-
-```
-NEXT_PUBLIC_API_URL=https://8tymn68hp9.execute-api.us-east-1.amazonaws.com
-```
+O cliente HTTP e os tipos vivem em [`lib/api.ts`](lib/api.ts). A URL base vem de
+`NEXT_PUBLIC_API_URL`. Para rodar offline, há um mock local em [`server/`](server/README.md).
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
@@ -58,9 +50,6 @@ NEXT_PUBLIC_API_URL=https://8tymn68hp9.execute-api.us-east-1.amazonaws.com
 | GET | `/conversations/:id/messages` | Mensagens de uma conversa |
 | POST | `/conversations/:id/messages` | Envia mensagem `{ text }` |
 | POST | `/ai/suggest` | Sugestão da IA `{ conversationId }` |
-
-O cliente HTTP e os tipos já vêm prontos em [`lib/api.ts`](lib/api.ts). Se preferir rodar o
-backend localmente (offline), veja [`server/README.md`](server/README.md).
 
 ---
 
@@ -97,14 +86,14 @@ de IA, estados de loading/erro/vazio, responsivo e com live updates por polling.
 ```
 app/inbox/{layout,page}.tsx + app/inbox/[conversationId]/page.tsx
 components/{conversation-list, chat, ai, ui} + components/inbox-shell.tsx
-lib/{api.ts (fornecido), queries.ts, query-keys.ts, cn.ts, format.ts}
+lib/{api.ts, queries.ts, query-keys.ts, cn.ts, format.ts}
 e2e/inbox.spec.ts + playwright.config.ts
 ```
 
 ### Testes E2E (Playwright)
 
 Fluxo ponta a ponta versionado em `e2e/`, rodando **100% local e determinístico**: o Playwright
-sobe o backend mock fornecido (`server/local.mjs`, store em memória) e o Next apontado para ele
+sobe o backend mock local (`server/local.mjs`, store em memória) e o Next apontado para ele
 (`NEXT_PUBLIC_API_URL`), sem rede nem dados reais.
 
 ```bash
@@ -121,35 +110,11 @@ do CI** de propósito (pipeline leve); roda sob demanda.
 
 - Testes de unidade/componente (React Testing Library) cobrindo o optimistic e o rollback de erro.
 - Prefetch on hover do item da lista; virtualização para listas muito longas.
-- WebSocket/SSE no lugar do polling, se o backend expusesse.
+- WebSocket/SSE no lugar do polling, se a API expusesse.
 
 ---
 
-## 📤 Entrega
+## 🧱 Stack
 
-- Repositório Git com **histórico de commits real**.
-- `README.md` próprio: como rodar, decisões de arquitetura, o que faria diferente com mais tempo.
-- O app deve **buildar** (`npm run build`) sem erros.
-
----
-
-## 🧮 Critérios de avaliação
-
-| Critério | Peso | O que olhamos |
-|----------|------|---------------|
-| Arquitetura de componentes | 25% | Composição, reuso, Server vs Client Components conscientes |
-| Data fetching & estado | 25% | React Query bem usado, cache/invalidação, sem waterfalls |
-| UX & estados | 20% | Loading/erro/vazio, update otimista, responsividade, acessibilidade |
-| Qualidade do código | 20% | Tipagem, organização, naming, legibilidade |
-| Capricho & detalhes | 10% | Aquilo que faz parecer um produto de verdade |
-
----
-
-## 📋 Regras
-
-- **Prazo**: 5 dias corridos.
-- **Stack obrigatória**: Next.js (App Router) + TypeScript. UI à sua escolha (Tailwind já configurado;
-  pode usar shadcn/ui, etc.).
-- Pode usar IA como assistente — mas **você precisa entender e defender cada decisão** na entrevista.
-
-Boa sorte! 🚀
+Next.js 15 (App Router) · React 19 · TypeScript strict · @tanstack/react-query · Tailwind v4 ·
+axios · Playwright (E2E).

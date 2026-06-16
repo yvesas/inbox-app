@@ -1,9 +1,9 @@
 {
-  "name": "desafio-frontend-server",
+  "name": "inbox-mock-server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Backend funcional fornecido para o desafio de frontend (inbox WhatsApp + IA)",
+  "description": "Mock local da API do inbox (atendimento WhatsApp + IA)",
   "scripts": {
     "dev": "node local.mjs",
     "start": "node local.mjs",

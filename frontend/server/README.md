@@ -1,7 +1,7 @@
-# Backend fornecido (não precisa modificar)
+# Backend (mock) do inbox
 
-Este é o backend que o seu frontend consome. Ele já está **hospedado** (a URL está no
-README principal). Você só precisa disto se quiser rodar a API localmente.
+Backend funcional que o frontend consome — útil para rodar a API **localmente e offline**
+(store em memória). A app também pode apontar para uma API hospedada (ver README do frontend).
 
 ## Rodar localmente (store em memória, sem AWS)
 
@@ -39,19 +39,19 @@ aws cloudformation package \
   --template-file template.yaml \
   --s3-bucket <bucket-de-deploy> \
   --output-template-file packaged.yaml \
-  --profile myde --region us-east-1
+  --profile <seu-perfil> --region us-east-1
 
 aws cloudformation deploy \
   --template-file packaged.yaml \
-  --stack-name desafio-frontend-backend \
+  --stack-name inbox-backend-mock \
   --capabilities CAPABILITY_IAM \
   --parameter-overrides SeedToken=<token> OpenAiApiKey=<opcional> \
-  --profile myde --region us-east-1
+  --profile <seu-perfil> --region us-east-1
 
 # Popular os dados de exemplo (uma vez):
-API=$(aws cloudformation describe-stacks --stack-name desafio-frontend-backend \
+API=$(aws cloudformation describe-stacks --stack-name inbox-backend-mock \
   --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text \
-  --profile myde --region us-east-1)
+  --profile <seu-perfil> --region us-east-1)
 curl -X POST "$API/admin/seed" -H "x-seed-token: <token>"
 ```
 

@@ -6,6 +6,6 @@ package-lock.json
 mock-meta-server
 mock-openai-server
 
-# Conteúdo do desafio / docs — não reformatar (a KB é parseada pelo StubProvider)
+# Conteúdo do projeto / docs — não reformatar (a KB é parseada pelo StubProvider)
 *.md
 knowledge-base

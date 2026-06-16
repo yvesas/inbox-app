@@ -4,11 +4,11 @@ Backend que recebe mensagens de WhatsApp (formato **Meta Cloud API**), processa 
 **assíncrona** e responde com uma **LLM ancorada numa base de conhecimento**, de volta pelo
 mock da Meta. Multi-tenant, idempotente e observável.
 
-> Desafio técnico — Desenvolvedor(a) Backend (Node.js + TypeScript).
+> API de atendimento ao cliente via WhatsApp com IA (Node.js + TypeScript).
 
 ---
 
-## ⚡ Quickstart (para avaliar)
+## ⚡ Quickstart
 
 Pré-requisitos: **Node ≥ 20** e **Docker**. Rode tudo a partir desta pasta (`backend/`).
 **Não precisa de chave da OpenAI** — sem ela, o fluxo roda ponta a ponta com um stub
@@ -238,7 +238,7 @@ Logs estruturados com Pino. No fluxo de mensagem, cada log carrega
   arquitetura, async, segurança e idempotência.
 - **Paginação/filtros** na REST — fora do escopo mínimo.
 - **RAG vetorial** — desnecessário para o tamanho atual da base.
-- **Dead-letter queue / métricas** — o retry/backoff do BullMQ cobre o essencial do desafio.
+- **Dead-letter queue / métricas** — o retry/backoff do BullMQ cobre o essencial por enquanto.
 
 ---
 
@@ -257,5 +257,5 @@ src/
   index.ts               # API
   worker.ts              # consumidor da fila
 knowledge-base/          # base de conhecimento (NeoFibra)
-mock-meta-server/        # mock da Meta (fornecido)
+mock-meta-server/        # mock da Meta (incluído)
 ```

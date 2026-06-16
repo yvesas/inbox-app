@@ -77,6 +77,6 @@ export const messages = {
 
 export const agent = {
   id: "agent-1",
-  name: "Atendente Myde",
+  name: "Atendente NeoFibra",
   role: "Suporte NeoFibra",
 };

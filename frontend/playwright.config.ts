@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * E2E do inbox rodando 100% local e determinístico:
- *  - sobe o backend mock fornecido (`server/local.mjs`, store em memória) na :4000;
+ *  - sobe o backend mock local (`server/local.mjs`, store em memória) na :4000;
  *  - sobe o Next apontado para ele via NEXT_PUBLIC_API_URL (precedência sobre o
  *    `.env.local`, que aponta para a API hospedada).
  *

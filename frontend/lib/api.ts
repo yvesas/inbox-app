@@ -1,8 +1,8 @@
 import axios from "axios";
 
 /**
- * Cliente da API já configurado. Aponta para NEXT_PUBLIC_API_URL (veja .env.example).
- * O backend é fornecido e está hospedado — você NÃO precisa implementá-lo.
+ * Cliente da API de mensagens. Aponta para NEXT_PUBLIC_API_URL (veja .env.example);
+ * para rodar offline, há um mock local em `server/`.
  *
  * Rotas disponíveis:
  *   GET  /me
