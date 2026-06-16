@@ -8,6 +8,37 @@ mock da Meta. Multi-tenant, idempotente e observável.
 
 ---
 
+## ⚡ Quickstart (para avaliar)
+
+Pré-requisitos: **Node ≥ 20** e **Docker**. Rode tudo a partir desta pasta (`backend/`).
+**Não precisa de chave da OpenAI** — sem ela, o fluxo roda ponta a ponta com um stub
+determinístico (ou com o `mock-openai` do compose).
+
+```bash
+docker compose up -d                 # postgres, redis, mock-meta, mock-openai
+npm install
+cp .env.example .env                 # funciona sem editar
+npm run db:migrate && npm run db:seed
+npm run stack                        # sobe API (:8000) + worker juntos, com logs rotulados
+```
+
+Em outro terminal, simule uma mensagem de cliente e veja a resposta entregue:
+
+```bash
+curl -X POST localhost:8001/simulate/inbound \
+  -H 'Content-Type: application/json' \
+  -d '{"from":"5511999990000","text":"Quais os planos e precos?"}'
+curl -s localhost:8001/sent
+```
+
+Testes: `npm test` (verde sem Docker; com Docker, roda também as integrações). Detalhes,
+decisões e variantes (API+worker em terminais separados, IA real) nas seções abaixo.
+
+> Se preferir subir API e worker separadamente, use `npm run dev` e `npm run worker` em vez de
+> `npm run stack`. Tudo explicado em **[Como rodar (do zero)](#como-rodar-do-zero)**.
+
+---
+
 ## Fluxo
 
 ```
