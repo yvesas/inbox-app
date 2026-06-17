@@ -16,7 +16,7 @@ export function Chat({ conversationId }: { conversationId: string }) {
   const { data: messages, isLoading, isError } = useMessages(conversationId);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-w-0 flex-1 flex-col">
       <ChatHeader conversation={conversation} />
       <MessageList messages={messages} isLoading={isLoading} isError={isError} />
       <Composer conversationId={conversationId} />

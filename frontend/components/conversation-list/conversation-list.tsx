@@ -5,6 +5,7 @@ import { useSelectedLayoutSegment } from "next/navigation";
 import { useConversations, useMe } from "@/lib/queries";
 import { ConversationItem } from "./conversation-item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchIcon } from "@/components/ui/icons";
 
 /**
  * Painel esquerdo: cabeçalho com o agente logado, busca client-side e a lista de
@@ -28,14 +29,24 @@ export function ConversationList() {
     );
   }, [data, search]);
 
+  const count = data?.length ?? 0;
+
   return (
     <div className="flex h-full flex-col">
       <header className="border-b border-neutral-200 px-4 py-3">
-        <h1 className="text-lg font-semibold text-neutral-900">Conversas</h1>
-        <p className="text-xs text-neutral-500">
+        <div className="flex items-baseline justify-between gap-2">
+          <h1 className="text-lg font-semibold text-neutral-900">Conversas</h1>
+          {count > 0 && (
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">
+              {count}
+            </span>
+          )}
+        </div>
+        <p className="truncate text-xs text-neutral-500">
           {me.data ? `${me.data.name} · ${me.data.role}` : " "}
         </p>
-        <div className="mt-3">
+        <div className="relative mt-3">
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base text-neutral-400" />
           <label htmlFor="conversation-search" className="sr-only">
             Buscar conversas
           </label>
@@ -45,7 +56,7 @@ export function ConversationList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nome, telefone…"
-            className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm outline-none focus:border-neutral-400 focus:bg-white"
+            className="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-green-500 focus:bg-white"
           />
         </div>
       </header>
