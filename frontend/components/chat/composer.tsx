@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSendMessage, useSuggestReply } from "@/lib/queries";
+import { useAutosizeTextarea } from "@/lib/hooks/use-autosize-textarea";
 import { SuggestButton } from "@/components/ai/suggest-button";
+import { SendIcon } from "@/components/ui/icons";
 
 /**
- * Composer: campo de texto + envio (optimistic) + sugestão de IA. A sugestão apenas
- * popula o input (rascunho editável), enquanto o envio dispara a mutation otimista.
+ * Composer: campo de texto que cresce com o conteúdo + envio (optimistic) + sugestão
+ * de IA. A sugestão apenas popula o input (rascunho editável); o envio dispara a
+ * mutation otimista. O auto-resize fica num hook dedicado (SRP) — aqui só orquestra.
  */
 export function Composer({ conversationId }: { conversationId: string }) {
   const [text, setText] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const send = useSendMessage(conversationId);
   const suggest = useSuggestReply(conversationId);
+
+  useAutosizeTextarea(inputRef, text);
 
   function submit() {
     const body = text.trim();
@@ -22,7 +28,10 @@ export function Composer({ conversationId }: { conversationId: string }) {
 
   function onSuggest() {
     suggest.mutate(undefined, {
-      onSuccess: (res) => setText(res.suggestion),
+      onSuccess: (res) => {
+        setText(res.suggestion);
+        inputRef.current?.focus();
+      },
     });
   }
 
@@ -34,7 +43,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
       </div>
 
       <form
-        className="flex items-end gap-2"
+        className="flex items-end gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-2 transition-colors focus-within:border-green-500 focus-within:bg-white"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -45,6 +54,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
         </label>
         <textarea
           id="composer-input"
+          ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
@@ -56,14 +66,16 @@ export function Composer({ conversationId }: { conversationId: string }) {
           }}
           rows={1}
           placeholder="Escreva uma mensagem…"
-          className="max-h-32 min-h-[42px] flex-1 resize-none rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
+          className="max-h-48 min-h-[44px] flex-1 resize-none self-stretch bg-transparent px-2 py-2 text-sm leading-relaxed outline-none placeholder:text-neutral-400"
         />
         <button
           type="submit"
           disabled={!text.trim()}
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Enviar mensagem"
+          className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Enviar
+          <SendIcon className="text-base" />
+          <span className="hidden sm:inline">Enviar</span>
         </button>
       </form>
 

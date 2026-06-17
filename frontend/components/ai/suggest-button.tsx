@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { SparklesIcon } from "@/components/ui/icons";
 
 /**
  * Botão "Sugerir resposta com IA". Apenas dispara a sugestão e sinaliza o loading;
@@ -24,7 +25,7 @@ export function SuggestButton({
         "hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60",
       )}
     >
-      <span aria-hidden>✨</span>
+      <SparklesIcon className="text-base" />
       {loading ? "Gerando…" : "Sugerir com IA"}
     </button>
   );

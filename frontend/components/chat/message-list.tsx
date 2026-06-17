@@ -65,7 +65,12 @@ export function MessageList({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto chat-surface p-4">
-      <ul role="log" aria-live="polite" aria-label="Mensagens da conversa" className="space-y-2">
+      <ul
+        role="log"
+        aria-live="polite"
+        aria-label="Mensagens da conversa"
+        className="mx-auto max-w-4xl space-y-2"
+      >
         {messages?.map((m) => {
           const day = dayKey(m.createdAt);
           const showSeparator = day !== lastDay;

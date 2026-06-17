@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.env
+npm-debug.log*
+Dockerfile
+.dockerignore
+mock-meta-server/node_modules
+mock-openai-server/node_modules

@@ -1,3 +1,21 @@
+# Dois modos:
+#  • Padrão (infra) — `docker compose up -d` sobe só Postgres/Redis/mock-meta/mock-openai;
+#    você roda a API e o worker no host (`npm run dev` / `npm run worker`).
+#  • Tudo em Docker — `docker compose --profile app up --build` sobe também API + worker + migrate.
+#    Nesse modo, aponte o mock-meta para o container da API:
+#      WEBHOOK_URL=http://api:8000/webhook docker compose --profile app up --build
+x-app-env: &app-env
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/atendimento
+  REDIS_URL: redis://redis:6379
+  META_API_BASE_URL: http://mock-meta:8001
+  META_PHONE_NUMBER_ID: "123456789012345"
+  META_VERIFY_TOKEN: dev-verify-token
+  META_APP_SECRET: super-secret-app-secret-trocar
+  META_TOKEN: mock-token
+  UI_TENANT_API_KEY: dev-api-key-neofibra
+  NODE_ENV: production
+  LOG_LEVEL: info
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -41,8 +59,9 @@ services:
     environment:
       # Mesmos valores do seu .env — usados para ASSINAR o webhook (HMAC-SHA256).
       META_APP_SECRET: super-secret-app-secret-trocar
-      # Para onde o mock entrega os webhooks (seu backend rodando no host, porta 8000).
-      CANDIDATE_WEBHOOK_URL: http://host.docker.internal:8000/webhook
+      # Para onde o mock entrega os webhooks. Padrão: backend no host (porta 8000).
+      # No modo tudo-em-Docker, sobrescreva: WEBHOOK_URL=http://api:8000/webhook
+      CANDIDATE_WEBHOOK_URL: ${WEBHOOK_URL:-http://host.docker.internal:8000/webhook}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -54,6 +73,42 @@ services:
     build: ./mock-openai-server
     ports:
       - "8002:8002"
+
+  # ── App em Docker (profile "app") ──────────────────────────────────────────
+  migrate:
+    profiles: ["app"]
+    build: .
+    command: sh -c "npm run db:migrate && npm run db:seed && npm run db:seed:demo"
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    profiles: ["app"]
+    build: .
+    command: node dist/index.js
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    profiles: ["app"]
+    build: .
+    command: node dist/worker.js
+    environment: *app-env
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

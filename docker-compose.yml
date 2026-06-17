@@ -1,0 +1,107 @@
+# Stack unificada do monorepo: sobe backend (API + worker + infra) e frontend juntos,
+# com o frontend consumindo o backend via as rotas /ui (BFF).
+#
+#   docker compose up --build
+#   → frontend em http://localhost:3000  (consome http://localhost:8000/ui)
+#   → API em http://localhost:8000 · mock-meta em http://localhost:8001
+#
+# Cada app também roda isolada em Docker pelo seu próprio compose
+# (backend/docker-compose.yml e frontend/docker-compose.yml).
+name: inbox-app
+
+# Env compartilhado pelos serviços do backend (API, worker e migrate).
+x-backend-env: &backend-env
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/atendimento
+  REDIS_URL: redis://redis:6379
+  META_API_BASE_URL: http://mock-meta:8001
+  META_PHONE_NUMBER_ID: "123456789012345"
+  META_VERIFY_TOKEN: dev-verify-token
+  META_APP_SECRET: super-secret-app-secret-trocar
+  META_TOKEN: mock-token
+  UI_TENANT_API_KEY: dev-api-key-neofibra
+  NODE_ENV: production
+  LOG_LEVEL: info
+  # Sem OPENAI_API_KEY → StubProvider (respostas ancoradas na base de conhecimento).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: atendimento
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Simula a Meta: assina e entrega webhooks na API, e recebe os envios.
+  mock-meta:
+    build: ./backend/mock-meta-server
+    ports:
+      - "8001:8001"
+    environment:
+      META_APP_SECRET: super-secret-app-secret-trocar
+      CANDIDATE_WEBHOOK_URL: http://backend-api:8000/webhook
+
+  # Roda migrations + seed (tenant + dados de demo) uma vez e encerra.
+  backend-migrate:
+    build: ./backend
+    command: sh -c "npm run db:migrate && npm run db:seed && npm run db:seed:demo"
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend-api:
+    build: ./backend
+    command: node dist/index.js
+    environment: *backend-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend-migrate:
+        condition: service_completed_successfully
+
+  backend-worker:
+    build: ./backend
+    command: node dist/worker.js
+    environment: *backend-env
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend-migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # URL alcançável PELO NAVEGADOR (inlinada no build do bundle client).
+        NEXT_PUBLIC_API_URL: http://localhost:8000/ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend-api
+
+volumes:
+  pgdata:

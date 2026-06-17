@@ -45,7 +45,7 @@ test.describe("Inbox", () => {
 
     const texto = `Mensagem de teste E2E ${Date.now()}`;
     await page.getByRole("textbox", { name: "Escrever mensagem" }).fill(texto);
-    await page.getByRole("button", { name: "Enviar", exact: true }).click();
+    await page.getByRole("button", { name: "Enviar mensagem" }).click();
 
     // A bolha aparece no chat (a prévia da lista também atualiza → escopa ao log).
     const messages = page.getByRole("log", { name: "Mensagens da conversa" });
@@ -67,6 +67,6 @@ test.describe("Inbox", () => {
 
   test("mostra o estado vazio quando nenhuma conversa está aberta", async ({ page }) => {
     await page.goto("/inbox");
-    await expect(page.getByText("Selecione uma conversa para começar.")).toBeVisible();
+    await expect(page.getByText("Nenhuma conversa selecionada")).toBeVisible();
   });
 });

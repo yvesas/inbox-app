@@ -16,6 +16,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx src/db/seed.ts",
+    "db:seed:demo": "tsx src/db/seed-demo.ts",
     "stack": "docker compose up -d --wait postgres redis mock-meta mock-openai && npm run db:migrate && npm run db:seed && concurrently -n api,worker -c blue,magenta \"npm:dev\" \"npm:worker\"",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -24,6 +25,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@fastify/cors": "^11.2.0",
     "bullmq": "^5.78.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.45.2",
